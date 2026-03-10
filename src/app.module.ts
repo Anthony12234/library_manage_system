@@ -10,7 +10,15 @@ import { BookModule } from './book/book.module';
 import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
-  imports: [DatabaseModule, ConfigModule, OssModule, AuthModule, UserModule, BookModule, TransactionModule],
+  imports: [
+    DatabaseModule,
+    ConfigModule,
+    OssModule,
+    AuthModule,
+    UserModule,
+    BookModule,
+    TransactionModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
