@@ -1,34 +1,60 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+
+import { CurrentUser } from '../auth/jwt.strategy';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
+  @Post('create-user')
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
-  @Get()
-  findAll() {
+  @UseGuards(AuthGuard('jwt'))
+  @Get('list-users')
+  findAll(@CurrentUser('username') currentUsername: string) {
+    console.log('当前请求的用户信息:', currentUsername);
     return this.userService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  @Get(':username')
+  findOneByUsername(@Param('username') username: string) {
+    return this.userService.findOneByUsername(username);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  @Patch(':username')
+  update(
+    @Param('username') username: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.update(username, updateUserDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  @UseGuards(AuthGuard('jwt'))
+  @Delete(':username')
+  remove(
+    @Param('username') username: string,
+    @CurrentUser('username') currentUsername: string,
+    @CurrentUser('role') role: string,
+  ) {
+    if (role === 'admin' || currentUsername === username) {
+      return this.userService.remove(username);
+    } else {
+      return 'Permission denied';
+    }
   }
 }
